@@ -1,3 +1,6 @@
+const Especie = require("../especie/especie");
+const Jogo = require("../jogo/jogo");
+const Recinto = require("../recinto/recinto");
 const AnimalDTO = require("./animalDTO");
 
 class Animal {
@@ -14,9 +17,9 @@ class Animal {
         return new Animal(info.id, especie, recinto, info.felicidade, info.fome, jogo);
     }
 
-    static async criar(especie, recinto, felicidade, fome, jogo) {
-        const id = await AnimalDTO.criar(especie.id, recinto.id, felicidade, fome, jogo.id);
-        return new Animal(id, especie, recinto, felicidade, fome, jogo)
+    static async criar(especieId, recintoId, felicidade, fome, jogoId) {
+        const id = await AnimalDTO.criar(especieId, recintoId, felicidade, fome, jogoId);
+        return Animal.obterPorId(id);
     }
 
     async salvar() {
@@ -25,16 +28,35 @@ class Animal {
 
     static async obterPorId(id) {
         const info = await AnimalDTO.obterPorId(id);
-        return this._setAnimalPorObj(info);
+        const especie = await Especie.obterPorId(info.especie_id);
+        const recinto = await Recinto.obterPorId(info.recinto_id);
+        const jogo = await Jogo.obterPorId(info.jogo_id);
+
+        return this._setAnimalPorObj(info, especie, recinto, jogo);
     }
 
     static async obterPorJogo(id) {
         const list = await AnimalDTO.obterPorJogo(id);
-        return 
+        
+        return await Promise.all(list.map(async info => {
+            return await Animal.obterPorId(info.id);
+        }))
     }
 
-    static alimentar() {
-        this.fome = 0;
+    alimentar(totalComida = 0) {
+        let restanteComida = 0;
+        if(this.fome > totalComida) {
+            this.fome = this.fome - totalComida;
+        } else {
+            restanteComida = totalComida = totalComida - this.fome;
+            this.fome = 0;
+        }
+
+        return restanteComida;
+    }
+
+    calcularVisitantes() {
+        return Math.ceil(this.especie.consumoDiario / 10);
     }
 
     _calcularFelicidadeFome() {
@@ -72,6 +94,13 @@ class Animal {
 
     calcularFelicidade() {
         const felicidade = this._calcularFelicidadeFome() + this._calcularFelicidadeRecinto();
+
+        if(felicidade < 0) {
+            felicidade = 0;
+        } else if(felicidade > 100) {
+            felicidade = 100;
+        }
+
         return felicidade; 
     }
 

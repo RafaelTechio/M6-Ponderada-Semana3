@@ -14,7 +14,7 @@ class Especie {
         return new Especie(info.id, info.nome, info.consumo_diario, info.atratividade, info.max_por_recinto, info.custo_recinto);
     }
 
-    static async obterEspecie(id) {
+    static async obterPorId(id) {
         const info = await EspecieDTO.obterPorId(id);
         return this._setEspeciePorObj(info);
     }

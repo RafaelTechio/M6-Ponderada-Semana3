@@ -1,3 +1,5 @@
+const Especie = require("../especie/especie");
+const Jogo = require("../jogo/jogo");
 const RecintoDTO = require("./recintoDTO");
 
 class Recinto {
@@ -20,7 +22,17 @@ class Recinto {
 
     static async obterPorId(id) {
         const info = await RecintoDTO.obterPorId(id);
-        return this._setRecintoPorObj(info);
+        const especie = await Especie.obterPorId(info.especie_id);
+        const jogo = await Jogo.obterPorId(info.jogo_id);
+        return this._setRecintoPorObj(info, especie, jogo);
+    }
+
+    static async obterPorJogo(id) {
+        const list = await RecintoDTO.obterPorJogo(id);
+        
+        return await Promise.all(list.map(async info => {
+            return await Recinto.obterPorId(info.id);
+        }))
     }
 
     static async listar() {

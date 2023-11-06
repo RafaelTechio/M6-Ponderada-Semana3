@@ -16,8 +16,6 @@ async function getConnection() {
             console.error(err)
             reject(err)
         }
-    
-        console.log('connected');
         resolve(connection);
     }));
     

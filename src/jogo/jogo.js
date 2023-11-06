@@ -17,9 +17,36 @@ class Jogo {
         return new Jogo(id, dinheiro, dia, comida);
     }
 
-    static async obterJogo(id) {
+    static async obterPorId(id) {
         const info = await JogoDTO.obterPorId(id);
         return this._setJogoPorObj(info);
+    }
+
+    descontar(dinheiro) {
+        this.dinheiro = this.dinheiro - dinheiro;
+    }
+
+    converterVisitantes(visitantes) {
+        this.dinheiro = this.dinheiro + (visitantes * 2)
+    }
+
+    comprarComida(quantidade) {
+        if(quantidade <= this.dinheiro) {
+            this.dinheiro = this.dinheiro - quantidade;
+            this.comida = this.comida + quantidade;
+        } else {
+            this.comida = this.comida + this.dinheiro;
+            this.dinheiro = 0;
+        }
+    }
+
+    amanhecer() {
+        this.dia = this.dia + 1;
+        this.salvar();
+    }
+
+    async salvar() {
+        await JogoDTO.set(this.id, this.dinheiro, this.dia, this.comida);
     }
 }
 
